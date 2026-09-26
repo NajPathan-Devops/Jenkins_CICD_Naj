@@ -1,0 +1,60 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main',
+                    url: 'https://github.com/NajPathan-Devops/Docker_Naj.git'
+            }
+        }
+
+        stage('Deploy Files') {
+            steps {
+                sh '''
+                    rm -rf /opt/jenkins-apps/flask
+                    mkdir -p /opt/jenkins-apps/flask
+                    cp -r backend/. /opt/jenkins-apps/flask/
+                '''
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                sh '''
+                    cd /opt/jenkins-apps/flask
+                    python3 -m venv venv
+                    ./venv/bin/pip install --upgrade pip
+                    ./venv/bin/pip install -r requirements.txt
+                '''
+            }
+        }
+
+        stage('Deploy Flask') {
+            steps {
+                sh '''
+                    sudo systemctl restart flask-backend
+                    sudo systemctl status flask-backend --no-pager
+                '''
+            }
+        }
+
+        stage('Health Check') {
+            steps {
+                sh '''
+                    sleep 3
+                    curl -f http://127.0.0.1:5000/
+                '''
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'Flask backend deployed successfully on port 5000.'
+        }
+        failure {
+            echo 'Flask deployment failed.'
+        }
+    }
+}

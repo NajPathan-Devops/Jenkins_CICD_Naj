@@ -1,0 +1,58 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main',
+                    url: 'https://github.com/NajPathan-Devops/Docker_Naj.git'
+            }
+        }
+
+        stage('Deploy Files') {
+            steps {
+                sh '''
+                    rm -rf /opt/jenkins-apps/express
+                    mkdir -p /opt/jenkins-apps/express
+                    cp -r frontend/. /opt/jenkins-apps/express/
+                '''
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                sh '''
+                    cd /opt/jenkins-apps/express
+                    npm ci
+                '''
+            }
+        }
+
+        stage('Deploy Express') {
+            steps {
+                sh '''
+                    sudo systemctl restart express-frontend
+                    sudo systemctl status express-frontend --no-pager
+                '''
+            }
+        }
+
+        stage('Health Check') {
+            steps {
+                sh '''
+                    sleep 3
+                    curl -f http://127.0.0.1:3000/
+                '''
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'Express frontend deployed successfully on port 3000.'
+        }
+        failure {
+            echo 'Express deployment failed.'
+        }
+    }
+}
