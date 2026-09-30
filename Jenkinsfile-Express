@@ -5,7 +5,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 git branch: 'main',
-                    url: 'https://github.com/NajPathan-Devops/Docker_Naj.git'
+                   url: 'https://github.com/NajPathan-Devops/Jenkins_CICD_Naj.git'
             }
         }
 
