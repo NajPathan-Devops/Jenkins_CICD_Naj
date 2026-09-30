@@ -1,52 +1,107 @@
 
-````markdown
-# Jenkins CI/CD Pipeline – Flask + Express
+# Jenkins CI/CD Pipeline — Flask + Express on AWS
 
-## Assignment
+A complete Jenkins CI/CD project demonstrating automated deployment of a **Flask backend** and **Express.js frontend** to an **AWS EC2 Ubuntu server** using **Terraform, Jenkins, GitHub Webhooks, systemd, and automated health checks**.
 
-Tutedude DevOps Assignment 9 – Jenkins CI/CD Pipeline
+## Project Overview
 
-## Student
+This project implements two independent CI/CD pipelines:
 
-Naj Pathan
+* **Flask-CICD** — deploys the Flask backend on port `5000`
+* **Express-CICD** — deploys the Express frontend on port `3000`
 
-## GitHub Repository
+A GitHub webhook is configured to trigger Jenkins when code is pushed to the repository.
 
-https://github.com/NajPathan-Devops/Jenkins_CICD_Naj
-
----
-
-# 1. Project Overview
-
-This project demonstrates a Jenkins-based CI/CD pipeline for deploying a Flask backend and an Express.js frontend on an AWS EC2 Ubuntu server.
-
-The project contains two independent Jenkins pipelines:
-
-1. Flask-CICD – deploys the Flask backend on port 5000.
-2. Express-CICD – deploys the Express frontend on port 3000.
-
-GitHub Webhooks are configured so that a push to the repository can automatically trigger the Jenkins pipelines.
+The AWS EC2 infrastructure is provisioned using Terraform.
 
 ---
 
-# 2. Technology Stack
+## Architecture
 
-- AWS EC2
-- Ubuntu 24.04 LTS
-- Jenkins 2.568.3
-- Git and GitHub
-- Python 3
-- Flask 3.1.3
-- Node.js 20
-- npm
-- Express.js 5.2.1
-- systemd
-- Terraform
-- Bash
+```text
+                    ┌─────────────────────┐
+                    │   GitHub Repository │
+                    └──────────┬──────────┘
+                               │
+                         Push / Webhook
+                               │
+                               ▼
+                    ┌─────────────────────┐
+                    │       Jenkins       │
+                    │      EC2 :8080      │
+                    └──────────┬──────────┘
+                               │
+                  ┌────────────┴────────────┐
+                  │                         │
+                  ▼                         ▼
+          ┌───────────────┐        ┌───────────────┐
+          │ Flask-CICD    │        │ Express-CICD  │
+          └───────┬───────┘        └───────┬───────┘
+                  │                         │
+                  ▼                         ▼
+          Flask Backend             Express Frontend
+             :5000                      :3000
+                  │                         │
+                  └──────────┬──────────────┘
+                             ▼
+                       Health Checks
+```
 
 ---
 
-# 3. Project Structure
+## Technology Stack
+
+| Technology       | Purpose                        |
+| ---------------- | ------------------------------ |
+| AWS EC2          | Application and Jenkins server |
+| Terraform        | Infrastructure provisioning    |
+| Jenkins          | CI/CD automation               |
+| GitHub           | Source code management         |
+| GitHub Webhooks  | Automatic pipeline triggering  |
+| Ubuntu 24.04 LTS | Server operating system        |
+| Python 3         | Flask backend                  |
+| Flask            | Backend application            |
+| Node.js 20       | JavaScript runtime             |
+| Express.js       | Frontend application           |
+| systemd          | Application process management |
+| Bash             | Automation and deployment      |
+
+---
+
+## AWS Infrastructure
+
+**Region**
+
+```text
+ap-south-1
+```
+
+**Operating System**
+
+```text
+Ubuntu 24.04 LTS
+```
+
+**Instance Type**
+
+```text
+t3.micro
+```
+
+The EC2 instance was provisioned using Terraform.
+
+### Required Ports
+
+| Port | Purpose          |
+| ---: | ---------------- |
+|   22 | SSH              |
+| 3000 | Express frontend |
+| 5000 | Flask backend    |
+| 8080 | Jenkins          |
+
+---
+
+## Repository Structure
 
 ```text
 Jenkins_CICD_Naj/
@@ -72,98 +127,36 @@ Jenkins_CICD_Naj/
 │   └── .terraform.lock.hcl
 │
 ├── screenshots/
-│
+├── .gitignore
 └── README.md
-````
+```
 
-Generated Terraform provider files and Terraform state files are excluded using `.gitignore`.
+Generated Terraform state and provider directories are excluded from version control.
 
 ---
 
-# 4. Architecture
+# Infrastructure with Terraform
+
+Terraform provisions the AWS EC2 infrastructure required for the CI/CD environment.
+
+### Terraform Configuration
 
 ```text
-                         GitHub Repository
-                    Jenkins_CICD_Naj
-                              |
-                              | GitHub Webhook
-                              v
-                    +---------------------+
-                    |       Jenkins       |
-                    |   AWS EC2 :8080     |
-                    +----------+----------+
-                               |
-                  +------------+------------+
-                  |                         |
-                  v                         v
-          Flask-CICD Pipeline       Express-CICD Pipeline
-                  |                         |
-                  v                         v
-       /opt/jenkins-apps/flask   /opt/jenkins-apps/express
-                  |                         |
-                  v                         v
-          Flask Backend              Express Frontend
-             Port 5000                  Port 3000
-                  |                         |
-                  +-----------+-------------+
-                              |
-                              v
-                     Application Testing
+terraform/
+├── main.tf
+├── variables.tf
+├── outputs.tf
+└── .terraform.lock.hcl
 ```
 
----
-
-# 5. AWS EC2 Configuration
-
-Region:
-
-```text
-ap-south-1
-```
-
-Operating System:
-
-```text
-Ubuntu 24.04 LTS
-```
-
-Instance type:
-
-```text
-t3.micro
-```
-
-The EC2 instance was created using Terraform.
-
-Required ports:
-
-| Port | Purpose          |
-| ---- | ---------------- |
-| 22   | SSH              |
-| 3000 | Express frontend |
-| 5000 | Flask backend    |
-| 8080 | Jenkins          |
-
----
-
-# 6. Terraform
-
-Terraform was used to create the AWS infrastructure.
-
-Main Terraform files:
-
-```text
-terraform/main.tf
-terraform/variables.tf
-terraform/outputs.tf
-```
+### Resources
 
 The Terraform configuration creates:
 
 * AWS Security Group
 * Ubuntu EC2 instance
 
-Commands used:
+### Terraform Workflow
 
 ```bash
 terraform init
@@ -173,24 +166,28 @@ terraform plan
 terraform apply
 ```
 
-Terraform successfully created the required AWS resources.
+After validation and testing, temporary AWS resources can be destroyed to avoid unnecessary costs:
 
-Terraform state files and the `.terraform` directory are not included in GitHub because they are generated files and may contain infrastructure state information.
+```bash
+terraform destroy
+```
+
+Terraform state files and generated provider directories are excluded from GitHub.
 
 ---
 
-# 7. Flask Backend
+# Flask Backend
 
-The Flask backend runs on:
+The Flask application runs on:
 
 ```text
 Port: 5000
 ```
 
-Health endpoint:
+### Health Check
 
-```text
-http://<EC2-PUBLIC-IP>:5000/
+```bash
+curl -f http://127.0.0.1:5000/
 ```
 
 Expected response:
@@ -199,13 +196,13 @@ Expected response:
 Flask Backend is Running!
 ```
 
-The backend also provides:
+### Application Features
+
+The backend provides a registration endpoint:
 
 ```text
 POST /submit
 ```
-
-for receiving registration form data.
 
 Python dependencies are installed using:
 
@@ -217,29 +214,23 @@ python3 -m venv venv
 
 ---
 
-# 8. Express Frontend
+# Express Frontend
 
-The Express frontend runs on:
+The Express application runs on:
 
 ```text
 Port: 3000
 ```
 
-URL:
+The application provides a student registration form and communicates with the Flask backend.
 
-```text
-http://<EC2-PUBLIC-IP>:3000/
-```
-
-The frontend provides a student registration form.
-
-The Express application communicates with the Flask backend using:
+Backend configuration:
 
 ```text
 BACKEND_URL=http://127.0.0.1:5000
 ```
 
-Dependencies are installed using:
+Node.js dependencies are installed using:
 
 ```bash
 npm ci
@@ -247,70 +238,70 @@ npm ci
 
 ---
 
-# 9. Process Management
+# Process Management with systemd
 
-systemd is used to keep both applications running as services.
+Both applications run as systemd services.
 
-Flask service:
+### Flask
 
 ```text
 flask-backend.service
 ```
 
-Express service:
-
-```text
-express-frontend.service
-```
-
-Check Flask:
+Check status:
 
 ```bash
 sudo systemctl status flask-backend
 ```
 
-Restart Flask:
+Restart:
 
 ```bash
 sudo systemctl restart flask-backend
 ```
 
-Check Express:
+### Express
+
+```text
+express-frontend.service
+```
+
+Check status:
 
 ```bash
 sudo systemctl status express-frontend
 ```
 
-Restart Express:
+Restart:
 
 ```bash
 sudo systemctl restart express-frontend
 ```
 
+Using systemd allows the applications to run as managed Linux services and restart without manually launching the applications.
+
 ---
 
-# 10. Jenkins Configuration
+# Jenkins CI/CD
 
-Jenkins is installed on the same AWS EC2 instance.
-
-Jenkins URL:
-
-```text
-http://<EC2-PUBLIC-IP>:8080/
-```
-
-Two separate Jenkins pipelines were created:
+Two independent Jenkins pipelines are configured:
 
 ```text
 Flask-CICD
 Express-CICD
 ```
 
+Jenkins runs on the AWS EC2 instance:
+
+```text
+http://<EC2-PUBLIC-IP>:8080/
+```
+
 ---
 
-# 11. Flask Jenkins Pipeline
+## Flask CI/CD Pipeline
 
-The Flask pipeline performs these stages:
+Pipeline flow:
 
 ```text
 Checkout
@@ -326,12 +317,12 @@ Health Check
 
 The pipeline:
 
-1. Pulls the `main` branch from GitHub.
-2. Copies the `Flask` application to the deployment directory.
+1. Checks out the `main` branch from GitHub.
+2. Copies the Flask application to the deployment directory.
 3. Creates a Python virtual environment.
 4. Installs Python dependencies.
 5. Restarts the Flask systemd service.
-6. Checks the Flask health endpoint.
+6. Performs a health check.
 
 Deployment directory:
 
@@ -339,11 +330,17 @@ Deployment directory:
 /opt/jenkins-apps/flask
 ```
 
+Jenkinsfile:
+
+```text
+Jenkinsfile-Flask
+```
+
 ---
 
-# 12. Express Jenkins Pipeline
+## Express CI/CD Pipeline
 
-The Express pipeline performs these stages:
+Pipeline flow:
 
 ```text
 Checkout
@@ -359,11 +356,11 @@ Health Check
 
 The pipeline:
 
-1. Pulls the `main` branch from GitHub.
-2. Copies the `Express` application to the deployment directory.
-3. Installs npm dependencies using `npm ci`.
+1. Checks out the `main` branch from GitHub.
+2. Copies the Express application to the deployment directory.
+3. Installs dependencies using `npm ci`.
 4. Restarts the Express systemd service.
-5. Checks the Express application.
+5. Performs an application health check.
 
 Deployment directory:
 
@@ -371,13 +368,19 @@ Deployment directory:
 /opt/jenkins-apps/express
 ```
 
+Jenkinsfile:
+
+```text
+Jenkinsfile-Express
+```
+
 ---
 
-# 13. GitHub Webhook
+# GitHub Webhook Automation
 
-A GitHub webhook was configured for automatic Jenkins triggering.
+A GitHub webhook connects the repository to Jenkins.
 
-Webhook URL:
+Webhook endpoint:
 
 ```text
 http://<EC2-PUBLIC-IP>:8080/github-webhook/
@@ -395,9 +398,9 @@ Content type:
 application/json
 ```
 
-The GitHub webhook delivery was successfully tested.
+The webhook was tested successfully.
 
-Jenkins pipelines also contain:
+The Jenkins pipelines use:
 
 ```groovy
 triggers {
@@ -405,60 +408,69 @@ triggers {
 }
 ```
 
-This allows GitHub push events to trigger Jenkins builds.
+This enables Jenkins builds to be triggered by GitHub push events.
 
 ---
 
-# 14. CI/CD Workflow
+# CI/CD Workflow
 
-The complete workflow is:
+The complete deployment workflow is:
 
 ```text
-Developer pushes code
-        |
-        v
-GitHub Repository
-        |
-        | Webhook
-        v
+Developer
+    │
+    │ git push
+    ▼
+GitHub
+    │
+    │ Webhook
+    ▼
 Jenkins
-        |
-        +-------------------+
-        |                   |
-        v                   v
- Flask-CICD          Express-CICD
-        |                   |
-        v                   v
- Flask Deployment     Express Deployment
-        |                   |
-        v                   v
- Port 5000             Port 3000
+    │
+    ├───────────────┐
+    ▼               ▼
+Flask-CICD    Express-CICD
+    │               │
+    ▼               ▼
+Install          Install
+Dependencies     Dependencies
+    │               │
+    ▼               ▼
+Deploy Flask     Deploy Express
+    │               │
+    ▼               ▼
+systemd          systemd
+    │               │
+    └───────┬───────┘
+            ▼
+       Health Checks
 ```
 
 ---
 
-# 15. Successful Jenkins Builds
+# Successful Pipeline Builds
 
-The following Jenkins builds were successfully completed:
+The following builds were successfully completed during testing:
 
 ```text
 Flask-CICD #6
 Express-CICD #3
 ```
 
-Both pipelines successfully:
+The pipelines successfully performed:
 
-* Checked out the new GitHub repository.
-* Deployed application files.
-* Installed dependencies.
-* Restarted systemd services.
-* Passed health checks.
+* GitHub checkout
+* Application deployment
+* Dependency installation
+* systemd service restart
+* Application verification
+* Health checks
 
 ---
 
-# 16. Application Verification
+# Application Verification
 
-Flask verification:
+### Flask
 
 ```bash
 curl -f http://127.0.0.1:5000/
@@ -470,21 +482,23 @@ Expected:
 Flask Backend is Running!
 ```
 
-Express verification:
+### Express
 
 ```bash
 curl -f http://127.0.0.1:3000/
 ```
 
-Expected response contains the Student Registration Form.
+The Express application returns the student registration form.
 
-The registration form was also tested through the browser and successfully communicated with the Flask backend.
+The registration form was also tested through a browser and successfully communicated with the Flask backend.
 
 ---
 
-# 17. Screenshots
+# Screenshots
 
-Important screenshots included with this assignment:
+The repository contains screenshots documenting the implementation and testing process.
+
+Important evidence includes:
 
 ```text
 01-terraform-plan.png
@@ -499,51 +513,89 @@ Important screenshots included with this assignment:
 21-github-webhook-success.png
 ```
 
-The screenshots document Terraform deployment, Jenkins pipelines, application testing, and GitHub webhook configuration.
+These demonstrate:
+
+* Terraform infrastructure provisioning
+* Flask deployment
+* Express deployment
+* systemd services
+* Jenkins pipeline execution
+* GitHub webhook triggering
+* application testing
 
 ---
 
-# 18. Security and Cleanup
+# Security and Cleanup
 
-The project uses a dedicated AWS Security Group for the assignment.
+The project uses an AWS Security Group to control network access.
 
-After all screenshots and final documentation are completed, temporary AWS resources used for the assignment should be stopped or terminated to minimize unnecessary AWS charges.
+Sensitive and generated files are excluded from GitHub using `.gitignore`, including:
 
-The Terraform state files and generated provider directory are excluded from the GitHub repository.
+```text
+*.tfstate
+*.tfstate.*
+.terraform/
+*.pem
+*.key
+```
+
+Temporary AWS resources should be terminated after testing to minimize unnecessary cloud costs.
 
 ---
 
-# 19. Final Result
+# Key DevOps Concepts Demonstrated
 
-The assignment demonstrates a complete CI/CD workflow:
+This project demonstrates practical experience with:
+
+* Infrastructure as Code
+* AWS EC2
+* Terraform
+* Jenkins CI/CD
+* GitHub Webhooks
+* Automated deployment
+* Linux system administration
+* systemd service management
+* Python/Flask deployment
+* Node.js/Express deployment
+* Dependency management
+* Application health checks
+* CI/CD troubleshooting
+* Cloud resource cleanup
+
+---
+
+# Project Outcome
+
+This project demonstrates an end-to-end CI/CD workflow in which a GitHub code change can trigger Jenkins through a webhook and automatically deploy the Flask and Express applications to an AWS EC2 environment.
 
 ```text
 GitHub
    ↓
-GitHub Webhook
+Webhook
    ↓
 Jenkins
    ↓
-Flask-CICD / Express-CICD
+CI/CD Pipeline
    ↓
-Dependency Installation
+AWS EC2
    ↓
-systemd Deployment
+Application Deployment
    ↓
 Health Check
-   ↓
-Running Applications
 ```
-
-Both Flask and Express Jenkins pipelines successfully deployed the applications on AWS EC2.
 
 ---
 
-# 20. GitHub Repository
+# GitHub Repository
 
-GitHub:
+[Jenkins_CICD_Naj](https://github.com/NajPathan-Devops/Jenkins_CICD_Naj?utm_source=chatgpt.com)
 
-[https://github.com/NajPathan-Devops/Jenkins_CICD_Naj](https://github.com/NajPathan-Devops/Jenkins_CICD_Naj)
-```
+---
 
+## Author
 
+**Naj Pathan**
+
+Cloud & DevOps Learner
+
+GitHub: `NajPathan-Devops`
