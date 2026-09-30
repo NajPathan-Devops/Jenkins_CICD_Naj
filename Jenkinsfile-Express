@@ -1,3 +1,4 @@
+```groovy
 pipeline {
     agent any
 
@@ -5,7 +6,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 git branch: 'main',
-                   url: 'https://github.com/NajPathan-Devops/Jenkins_CICD_Naj.git'
+                    url: 'https://github.com/NajPathan-Devops/Jenkins_CICD_Naj.git'
             }
         }
 
@@ -14,7 +15,7 @@ pipeline {
                 sh '''
                     rm -rf /opt/jenkins-apps/express
                     mkdir -p /opt/jenkins-apps/express
-                    cp -r frontend/. /opt/jenkins-apps/express/
+                    cp -r Express/. /opt/jenkins-apps/express/
                 '''
             }
         }
@@ -51,8 +52,10 @@ pipeline {
         success {
             echo 'Express frontend deployed successfully on port 3000.'
         }
+
         failure {
             echo 'Express deployment failed.'
         }
     }
 }
+```
